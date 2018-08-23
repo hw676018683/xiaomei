@@ -9,12 +9,12 @@ import (
 // Group 提供带basePath的路由，代码更简洁，正则匹配更高效。
 // p只能是字符串路径，不能是正则表达式。
 func (r *Router) Group(p string) *Router {
-	p = cleanPath(p)
+	basePath := cleanPath(p)
 	if r.basePath != `` {
-		p = path.Join(r.basePath, p)
+		basePath = path.Join(r.basePath, basePath)
 	}
 	return &Router{
-		basePath:  p,
+		basePath:  basePath,
 		strRoutes: r.strRoutes,
 		regRoutes: r.regRoutes,
 		// SocketIO:  r.SocketIO,
@@ -100,12 +100,13 @@ func (r *Router) AddX(method string, reg string, handler RegRouteHandler) *Route
 		r.regRoutes[method] = make(map[string][]RegRoute)
 	}
 	regex := `^` + reg + `$`
-	for _, regRoute := range r.regRoutes[method][r.basePath] {
+	basePath := cleanPath(r.basePath)
+	for _, regRoute := range r.regRoutes[method][basePath] {
 		if regRoute.reg.String() == regex {
-			panic(`regexp route conflict: ` + method + ` ` + r.basePath + reg)
+			panic(`regexp route conflict: ` + method + ` ` + basePath + reg)
 		}
 	}
-	r.regRoutes[method][r.basePath] = append(r.regRoutes[method][r.basePath],
+	r.regRoutes[method][basePath] = append(r.regRoutes[method][basePath],
 		RegRoute{regexp.MustCompile(regex), handler},
 	)
 	return r

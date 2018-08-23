@@ -38,25 +38,27 @@ func (r *Router) regRoutesMatch(method string, path string, req *xiaomei.Request
 	if routes == nil {
 		return false
 	}
-	p := path
+	prefix := path
 	for {
-		if slice := routes[p]; slice != nil {
-			mp := path[len(p):]
+		if slice := routes[prefix]; slice != nil {
+			var pathToMatch = path
+			if prefix != `/` {
+				pathToMatch = path[len(prefix):]
+			}
 			for _, route := range slice {
-				if m := route.reg.FindStringSubmatch(mp); m != nil {
+				if m := route.reg.FindStringSubmatch(pathToMatch); m != nil {
 					route.handler(req, res, m)
 					return true
 				}
 			}
 		}
-		if p == `` {
-			return false
-		}
 		// 上一层路径
-		if i := strings.LastIndexByte(p, '/'); i > 0 {
-			p = p[:i]
+		if i := strings.LastIndexByte(prefix, '/'); i > 0 {
+			prefix = prefix[:i]
+		} else if i == 0 && prefix != `/` {
+			prefix = `/`
 		} else {
-			p = ``
+			return false
 		}
 	}
 }
