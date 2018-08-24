@@ -24,7 +24,6 @@ type Router struct {
 	strRoutes map[string]map[string]StrRouteHandler
 	// 正则路由   method     base_path
 	regRoutes map[string]map[string][]RegRoute
-	// SocketIO  *socketio.Server
 }
 
 func New() *Router {
@@ -33,15 +32,3 @@ func New() *Router {
 		regRoutes: make(map[string]map[string][]RegRoute),
 	}
 }
-
-/*
-func (r *Router) On(e string, f interface{}) {
-	if err := r.SocketIO.Of(r.basePath).On(e, f); err != nil {
-		panic(err)
-	}
-}
-
-func (r *Router) Of(p string) socketio.Namespace {
-	return r.SocketIO.Of(p)
-}
-*/

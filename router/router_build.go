@@ -17,7 +17,6 @@ func (r *Router) Group(p string) *Router {
 		basePath:  basePath,
 		strRoutes: r.strRoutes,
 		regRoutes: r.regRoutes,
-		// SocketIO:  r.SocketIO,
 	}
 }
 
