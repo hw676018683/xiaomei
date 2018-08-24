@@ -1,6 +1,7 @@
 package router
 
 import (
+	"path"
 	"regexp"
 
 	"github.com/lovego/xiaomei"
@@ -31,4 +32,36 @@ func New() *Router {
 		strRoutes: make(map[string]map[string]StrRouteHandler),
 		regRoutes: make(map[string]map[string][]RegRoute),
 	}
+}
+
+// 获取路由的根
+func (r *Router) Root() *Router {
+	return &Router{
+		strRoutes: r.strRoutes,
+		regRoutes: r.regRoutes,
+	}
+}
+
+// Group 提供带basePath的路由，代码更简洁，正则匹配更高效。
+// p只能是字符串路径，不能是正则表达式。
+func (r *Router) Group(p string) *Router {
+	basePath := cleanPath(p)
+	if r.basePath != `` {
+		basePath = path.Join(r.basePath, basePath)
+	}
+	return &Router{
+		basePath:  basePath,
+		strRoutes: r.strRoutes,
+		regRoutes: r.regRoutes,
+	}
+}
+
+func cleanPath(p string) string {
+	if p == "" {
+		return "/"
+	}
+	if p[0] != '/' {
+		p = "/" + p
+	}
+	return path.Clean(p)
 }

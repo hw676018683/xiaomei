@@ -6,28 +6,6 @@ import (
 	"strings"
 )
 
-// Group 提供带basePath的路由，代码更简洁，正则匹配更高效。
-// p只能是字符串路径，不能是正则表达式。
-func (r *Router) Group(p string) *Router {
-	basePath := cleanPath(p)
-	if r.basePath != `` {
-		basePath = path.Join(r.basePath, basePath)
-	}
-	return &Router{
-		basePath:  basePath,
-		strRoutes: r.strRoutes,
-		regRoutes: r.regRoutes,
-	}
-}
-
-// 获取路由的根
-func (r *Router) Root() *Router {
-	return &Router{
-		strRoutes: r.strRoutes,
-		regRoutes: r.regRoutes,
-	}
-}
-
 func (r *Router) Get(p string, handler StrRouteHandler) *Router {
 	return r.Add(`GET`, p, handler)
 }
@@ -95,14 +73,21 @@ func (r *Router) Add(method string, p string, handler StrRouteHandler) *Router {
 
 // 增加正则路由
 func (r *Router) AddX(method string, reg string, handler RegRouteHandler) *Router {
+	basePath := cleanPath(r.basePath)
+	prefix, reg := splitLiteralPrefix(reg)
+	if reg == `` {
+		panic(`group(` + basePath + `) literal regexp: ` + reg)
+	}
+	if prefix != `` {
+		basePath = path.Join(basePath, prefix)
+	}
 	if r.regRoutes[method] == nil {
 		r.regRoutes[method] = make(map[string][]RegRoute)
 	}
 	regex := `^` + reg + `$`
-	basePath := cleanPath(r.basePath)
 	for _, regRoute := range r.regRoutes[method][basePath] {
 		if regRoute.reg.String() == regex {
-			panic(`regexp route conflict: ` + method + ` ` + basePath + reg)
+			panic(`group(` + basePath + `) conflicting regexp: ` + reg)
 		}
 	}
 	r.regRoutes[method][basePath] = append(r.regRoutes[method][basePath],
@@ -111,12 +96,15 @@ func (r *Router) AddX(method string, reg string, handler RegRouteHandler) *Route
 	return r
 }
 
-func cleanPath(p string) string {
-	if p == "" {
-		return "/"
+func splitLiteralPrefix(reg string) (string, string) {
+	regex := regexp.MustCompile(reg)
+	prefix, fullLiteral := regex.LiteralPrefix()
+	if fullLiteral {
+		return "", ""
 	}
-	if p[0] != '/' {
-		p = "/" + p
+	if i := strings.LastIndexByte(prefix, '/'); i >= 2 {
+		prefix = prefix[:i]
+		return prefix, reg[i:]
 	}
-	return path.Clean(p)
+	return "", reg
 }
