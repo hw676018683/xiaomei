@@ -81,7 +81,7 @@ func testAddRoute(r *Router, route testRouteData, matched map[string]bool, testi
 func testHandleReq(
 	r *Router, route testRouteData, matched map[string]bool, prefix string, t *testing.T,
 ) {
-	method := strings.Replace(route.method, `x`, ``, 1)
+	method := strings.ToUpper(strings.TrimSuffix(route.method, `x`))
 	path := strings.Replace(route.path, `(\d+)`, `123`, 1)
 	req, _ := http.NewRequest(method, prefix+path, nil)
 	r.Handle(&xiaomei.Request{Request: req}, nil)

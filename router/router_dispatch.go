@@ -8,18 +8,18 @@ import (
 
 // 处理请求
 func (r *Router) Handle(req *xiaomei.Request, res *xiaomei.Response) bool {
-	method := strings.ToUpper(req.Method)
+	method := req.Method
 	if method == `HEAD` {
 		method = `GET`
 	}
-	path := cleanPath(req.URL.Path)
-	if r.strRoutesMatch(method, path, req, res) || r.regRoutesMatch(method, path, req, res) {
-		return true
+	path := req.URL.Path
+	if len(path) > 1 && path[len(path)-1] == '/' {
+		path = path[:len(path)-1]
 	}
-	return false
+	return r.strRoutesHandle(method, path, req, res) || r.regRoutesHandle(method, path, req, res)
 }
 
-func (r *Router) strRoutesMatch(method string, path string, req *xiaomei.Request, res *xiaomei.Response) bool {
+func (r *Router) strRoutesHandle(method string, path string, req *xiaomei.Request, res *xiaomei.Response) bool {
 	routes := r.strRoutes[method]
 	if routes == nil {
 		return false
@@ -33,7 +33,7 @@ func (r *Router) strRoutesMatch(method string, path string, req *xiaomei.Request
 }
 
 // 按斜线作为分隔符从深到浅依次匹配
-func (r *Router) regRoutesMatch(method string, path string, req *xiaomei.Request, res *xiaomei.Response) bool {
+func (r *Router) regRoutesHandle(method string, path string, req *xiaomei.Request, res *xiaomei.Response) bool {
 	routes := r.regRoutes[method]
 	if routes == nil {
 		return false
